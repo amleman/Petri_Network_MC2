@@ -141,16 +141,16 @@ class PetriNetSimulation {
             .attr("d", "M0,-5L10,0L0,5")
             .attr("fill", "#999");
 
-        // Draw edges
+        // Invertir la dirección de las líneas de conexión
         this.svg.selectAll("line.edge")
             .data(this.petriNetData.edges)
             .enter()
             .append("line")
             .attr("class", "edge")
-            .attr("x1", d => this.getNode(d.source).x)
-            .attr("y1", d => this.getNode(d.source).y)
-            .attr("x2", d => this.getNode(d.target).x)
-            .attr("y2", d => this.getNode(d.target).y)
+            .attr("x1", d => this.getNode(d.target).x)
+            .attr("y1", d => this.getNode(d.target).y)
+            .attr("x2", d => this.getNode(d.source).x)
+            .attr("y2", d => this.getNode(d.source).y)
             .attr("stroke", "#999")
             .attr("stroke-width", 1.5)
             .attr("marker-end", "url(#arrowhead)");
@@ -209,10 +209,17 @@ class PetriNetSimulation {
                 return this.state[d.id] === 1 ? "inline" : "none";
             });
 
-        // Update transition colors
+        // Update transition colors and animation
         this.svg.selectAll(".transition rect")
             .attr("fill", (d) => {
-                return this.isTransitionEnabled(d.id) ? "#90EE90" : "white";
+                // Si la transición está habilitada, color vibrante
+                return this.isTransitionEnabled(d.id) ? "#f72585" : "#fff";
+            })
+            .attr("stroke-width", (d) => {
+                return this.isTransitionEnabled(d.id) ? 4 : 2;
+            })
+            .attr("filter", (d) => {
+                return this.isTransitionEnabled(d.id) ? "drop-shadow(0 0 10px #f72585cc)" : "none";
             });
     }
 
@@ -358,6 +365,43 @@ class PetriNetSimulation {
         await this.fetchState();
     }
 
+    animateTokenTransition(fromId, transitionId, toId) {
+        const fromNode = this.getNode(fromId);
+        const transitionNode = this.getNode(transitionId);
+        const toNode = this.getNode(toId);
+        if (!fromNode || !transitionNode || !toNode) return;
+
+        const svg = this.svg;
+        // Crea el token en la plaza de origen
+        const token = svg.append("circle")
+            .attr("cx", fromNode.x)
+            .attr("cy", fromNode.y)
+            .attr("r", 10)
+            .attr("fill", "#e63946")
+            .attr("opacity", 1)
+            .attr("class", "animated-token");
+
+        // 1. Anima de la plaza a la transición
+        token.transition()
+            .duration(700)
+            .attr("cx", transitionNode.x)
+            .attr("cy", transitionNode.y)
+            .attr("r", 10)
+            .on("end", function() {
+                // 2. Anima de la transición a la plaza destino
+                token.transition()
+                    .duration(700)
+                    .attr("cx", toNode.x)
+                    .attr("cy", toNode.y)
+                    .attr("r", 8)
+                    .attr("opacity", 0.85)
+                    .on("end", function() {
+                        // Elimina el token animado al finalizar
+                        token.remove();
+                    });
+            });
+    }
+
     async step() {
         try {
             const response = await fetch('/transition/next', {
@@ -365,11 +409,30 @@ class PetriNetSimulation {
             });
             const result = await response.json();
             if (result.status === 'success') {
+                const prevState = { ...this.state };
                 this.state = result.state;
                 this.updateTrafficLights();
                 this.updateTransitionInfo();
                 this.updateTokens();
                 this.updateVehicles();
+
+                // Detecta y anima el movimiento de tokens pasando por la transición
+                const transitions = [
+                    { id: 'T1', from: ['S1_Green', 'S2_Green', 'S3_Red'], to: ['S1_Yellow', 'S2_Yellow', 'S3_Red'] },
+                    { id: 'T2', from: ['S1_Yellow', 'S2_Yellow', 'S3_Red'], to: ['S1_Red', 'S2_Red', 'S3_Green'] },
+                    { id: 'T3', from: ['S1_Red', 'S2_Red', 'S3_Green'], to: ['S1_Red', 'S2_Red', 'S3_Yellow'] },
+                    { id: 'T4', from: ['S1_Red', 'S2_Red', 'S3_Yellow'], to: ['S1_Green', 'S2_Green', 'S3_Red'] }
+                ];
+                for (const t of transitions) {
+                    const wasActive = t.from.every(p => prevState[p] === 1);
+                    const isNow = t.to.every(p => this.state[p] === 1);
+                    if (wasActive && isNow) {
+                        for (let i = 0; i < t.from.length; i++) {
+                            this.animateTokenTransition(t.from[i], t.id, t.to[i]);
+                        }
+                        break;
+                    }
+                }
             }
         } catch (error) {
             console.error('Error in simulation step:', error);

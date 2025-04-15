@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulación de Semáforos - Redes de Petri</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Simulación de Semáforos con Redes de Petri</h1>
+        
+        <div class="controls">
+            <button id="start">Iniciar</button>
+            <button id="pause">Pausar</button>
+            <button id="reset">Reiniciar</button>
+            <button id="save">Guardar</button>
+            <button id="load">Cargar</button>
+        </div>
+
+        <div class="simulation-container">
+            <div id="petri-net"></div>
+            <div id="intersection">
+                <div class="road horizontal-road">
+                    <div class="traffic-light" id="semaphore1">
+                        <div class="light red"></div>
+                        <div class="light yellow"></div>
+                        <div class="light green"></div>
+                        <div class="label">Semáforo 1 (Izquierda)</div>
+                    </div>
+                    <div class="traffic-light" id="semaphore2">
+                        <div class="light red"></div>
+                        <div class="light yellow"></div>
+                        <div class="light green"></div>
+                        <div class="label">Semáforo 2 (Derecha)</div>
+                    </div>
+                </div>
+                <div class="road vertical-road">
+                    <div class="traffic-light" id="semaphore3">
+                        <div class="light red"></div>
+                        <div class="light yellow"></div>
+                        <div class="light green"></div>
+                        <div class="label">Semáforo 3 (Inferior)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="info-panel">
+            <h3>Información de la Simulación</h3>
+            <div id="transition-info"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

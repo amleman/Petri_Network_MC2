@@ -59,29 +59,32 @@ button:hover {
     display: flex;
     flex-direction: column;
     align-items: center;
+    overflow: hidden;
+    background-color: transparent;
 }
 
 .road {
-    background-color: #333;
     position: relative;
 }
 
+/* Road Layout */
 .horizontal-road {
+    position: relative;
     width: 100%;
-    height: 100px;
-    margin-top: 200px;
+    height: 120px; /* Increased height to accommodate two lanes */
+    margin-top: 150px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
 .vertical-road {
-    width: 100px;
-    height: 200px;
     position: absolute;
-    bottom: 0;
+    width: 80px;
+    height: 200px;
     left: 50%;
     transform: translateX(-50%);
+    bottom: 0;
 }
 
 .traffic-light {
@@ -96,14 +99,17 @@ button:hover {
 
 #semaphore1 {
     margin-left: 20px;
+    margin-top: 260px;
 }
 
 #semaphore2 {
     margin-right: 20px;
+    margin-top: -250px;
 }
 
 #semaphore3 {
     position: absolute;
+    margin-left: 130px;
     bottom: 20px;
 }
 
@@ -135,6 +141,7 @@ button:hover {
 
 #transition-info {
     margin-top: 10px;
+    margin-left: 130px;
     font-size: 14px;
 }
 
@@ -194,4 +201,100 @@ button:hover {
     0% { r: 8; }
     50% { r: 10; }
     100% { r: 8; }
+}
+
+/* Vehicle Styles */
+.vehicle {
+    position: absolute;
+    width: 50px;
+    height: 30px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+/* Horizontal Vehicles */
+.vehicle.horizontal.right {
+    bottom: 20px; /* Upper lane for right-moving vehicles */
+    transform: translateY(0);
+}
+
+.vehicle.horizontal.left {
+    top: 20px; /* Lower lane for left-moving vehicles */
+    transform: rotate(180deg);
+}
+
+/* Vertical Vehicles */
+.vehicle.vertical {
+    left: 50%;
+    transform: translateX(-50%) rotate(90deg);
+    width: 50px;
+    height: 80px;
+}
+
+/* Vehicle Animations */
+@keyframes moveHorizontalRight {
+    0% {
+        left: -60px;
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        left: calc(100% + 60px);
+        opacity: 0;
+    }
+}
+
+@keyframes moveHorizontalLeft {
+    0% {
+        right: -60px;
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        right: calc(100% + 60px);
+        opacity: 0;
+    }
+}
+
+@keyframes moveVertical {
+    0% {
+        bottom: -60px;
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        bottom: calc(100% + 60px);
+        opacity: 0;
+    }
+}
+
+/* Animation states */
+.vehicle.horizontal.right.moving {
+    animation: moveHorizontalRight 5s linear infinite;
+}
+
+.vehicle.horizontal.left.moving {
+    animation: moveHorizontalLeft 5s linear infinite;
+}
+
+.vehicle.vertical.moving {
+    animation: moveVertical 5s linear infinite;
 }

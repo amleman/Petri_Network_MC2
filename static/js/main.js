@@ -62,9 +62,53 @@ class PetriNetSimulation {
             ]
         };
         
+        this.vehicles = {
+            horizontalRight: [],
+            horizontalLeft: [],
+            vertical: []
+        };
+        this.vehicleTypes = ['vehicle1.png', 'vehicle2.png', 'vehicle3.png'];
+        this.initializeVehicles();
+        this.initializeBackground();
         this.initializeControls();
         this.initializePetriNet();
         this.fetchState();
+    }
+
+    initializeBackground() {
+        const intersection = document.getElementById('intersection');
+        intersection.style.backgroundImage = "url('/static/images/background.png')";
+        intersection.style.backgroundSize = 'cover';
+        intersection.style.backgroundPosition = 'center';
+    }
+
+    initializeVehicles() {
+        // Clear any existing vehicles
+        document.querySelectorAll('.vehicle').forEach(v => v.remove());
+
+        // Create vehicle pool
+        for (let i = 0; i < 3; i++) {
+            // Horizontal vehicles moving right
+            const hVehicleRight = document.createElement('div');
+            hVehicleRight.className = 'vehicle horizontal right';
+            hVehicleRight.style.backgroundImage = `url('/static/images/${this.vehicleTypes[i % this.vehicleTypes.length]}')`;
+            document.querySelector('.horizontal-road').appendChild(hVehicleRight);
+            this.vehicles.horizontalRight.push(hVehicleRight);
+
+            // Horizontal vehicles moving left
+            const hVehicleLeft = document.createElement('div');
+            hVehicleLeft.className = 'vehicle horizontal left';
+            hVehicleLeft.style.backgroundImage = `url('/static/images/${this.vehicleTypes[i % this.vehicleTypes.length]}')`;
+            document.querySelector('.horizontal-road').appendChild(hVehicleLeft);
+            this.vehicles.horizontalLeft.push(hVehicleLeft);
+
+            // Vertical vehicles
+            const vVehicle = document.createElement('div');
+            vVehicle.className = 'vehicle vertical';
+            vVehicle.style.backgroundImage = `url('/static/images/${this.vehicleTypes[i % this.vehicleTypes.length]}')`;
+            document.querySelector('.vertical-road').appendChild(vVehicle);
+            this.vehicles.vertical.push(vVehicle);
+        }
     }
 
     initializeControls() {
@@ -172,6 +216,45 @@ class PetriNetSimulation {
             });
     }
 
+    updateVehicles() {
+        // Update horizontal vehicles based on traffic light state
+        const canMoveHorizontal = this.state['S1_Green'] === 1 && this.state['S2_Green'] === 1;
+        
+        // Update right-moving vehicles
+        this.vehicles.horizontalRight.forEach((vehicle, index) => {
+            if (canMoveHorizontal) {
+                vehicle.classList.add('moving');
+                vehicle.style.animationDelay = `${index * 1.5}s`;
+            } else {
+                vehicle.classList.remove('moving');
+                vehicle.style.animationDelay = '0s';
+            }
+        });
+
+        // Update left-moving vehicles
+        this.vehicles.horizontalLeft.forEach((vehicle, index) => {
+            if (canMoveHorizontal) {
+                vehicle.classList.add('moving');
+                vehicle.style.animationDelay = `${index * 1.5}s`;
+            } else {
+                vehicle.classList.remove('moving');
+                vehicle.style.animationDelay = '0s';
+            }
+        });
+
+        // Update vertical vehicles
+        const canMoveVertical = this.state['S3_Green'] === 1;
+        this.vehicles.vertical.forEach((vehicle, index) => {
+            if (canMoveVertical) {
+                vehicle.classList.add('moving');
+                vehicle.style.animationDelay = `${index * 1.5}s`;
+            } else {
+                vehicle.classList.remove('moving');
+                vehicle.style.animationDelay = '0s';
+            }
+        });
+    }
+
     isTransitionEnabled(transitionId) {
         if (!this.state || !this.transitions) return false;
 
@@ -212,6 +295,7 @@ class PetriNetSimulation {
             this.updateTrafficLights();
             this.updateTransitionInfo();
             this.updateTokens();
+            this.updateVehicles();
         } catch (error) {
             console.error('Error fetching state:', error);
         }
@@ -254,7 +338,7 @@ class PetriNetSimulation {
     async startSimulation() {
         if (!this.isRunning) {
             this.isRunning = true;
-            this.simulationInterval = setInterval(() => this.step(), 2000);
+            this.simulationInterval = setInterval(() => this.step(), 7000); // 7 seconds interval
             document.getElementById('start').disabled = true;
             document.getElementById('pause').disabled = false;
         }
@@ -285,6 +369,7 @@ class PetriNetSimulation {
                 this.updateTrafficLights();
                 this.updateTransitionInfo();
                 this.updateTokens();
+                this.updateVehicles();
             }
         } catch (error) {
             console.error('Error in simulation step:', error);
